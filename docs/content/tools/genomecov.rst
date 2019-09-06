@@ -358,7 +358,45 @@ for single-read experiment and extend the reads in the 5’-3’ direction up to
 The coverage "by estimated fragments" or by actual pair-end fragments graph is expected to peak at the actual binding site.
 
 
-``-fs`` Forces to use provided fragment size.
+``-fs`` Forces to use provided fragment size and/or center portion
+Format as fragmentsize(default -1):center(default -1)
+
+For example:
+
+.. code-block:: bash
+
+  $ cat y.bed
+  chr1    15      20      y1      1       +
+  chr1    17      22      y2      2       +
+  chr1    18      24      y2      2       -
+
+  $ bedtools genomecov -i y.bed -g genome.txt -bg
+  chr1    15      17      1
+  chr1    17      18      2
+  chr1    18      20      3
+  chr1    20      22      2
+  chr1    22      24      1
+
+  $ bedtools genomecov -i y.bed -g genome.txt -bg -fs 4
+  chr1    15      17      1
+  chr1    17      19      2
+  chr1    19      20      1
+  chr1    20      21      2
+  chr1    21      24      1
+
+  $ bedtools genomecov -i y.bed -g genome.txt -bg -fs 4:4
+  chr1    15      17      1
+  chr1    17      19      2
+  chr1    19      20      1
+  chr1    20      21      2
+  chr1    21      24      1
+
+  $ bedtools genomecov -i y.bed -g genome.txt -bg -fs -1:4
+  chr1    16      18      1
+  chr1    18      19      2
+  chr1    19      20      3
+  chr1    20      22      2
+  chr1    22      23      1
 
 
 ``-pc`` Calculates coverage for paired-end reads, coverage is calculated as the number of fragments covering each base pair
