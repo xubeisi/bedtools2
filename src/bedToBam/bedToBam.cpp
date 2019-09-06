@@ -37,8 +37,8 @@ using namespace std;
 
 // function declarations
 void bedtobam_help(void);
-void ProcessBed(BedFile *bed, GenomeFile *genome, bool isBED12, int mapQual, bool uncompressedBam);
-void ConvertBedToBam(const BED &bed, BamAlignment &bam, map<string, int> &chromToId, bool isBED12, int mapQual, int lineNum);
+void ProcessBed(BedFile *bed, GenomeFile *genome, bool isBED12, int mapQual, bool uncompressedBam, bool bedseq);
+void ConvertBedToBam(const BED &bed, BamAlignment &bam, map<string, int> &chromToId, bool isBED12, int mapQual, int lineNum, bool bedseq);
 void MakeBamHeader(const string &genomeFile, RefVector &refs, string &header, map<string, int> &chromToInt);
 int  bedtobam_reg2bin(int beg, int end);
 
@@ -60,6 +60,7 @@ int bedtobam_main(int argc, char* argv[]) {
     bool haveMapQual     = false;
     bool isBED12         = false;
     bool uncompressedBam = false;
+    bool bedseq = false;
 
     for(int i = 1; i < argc; i++) {
         int parameterLength = (int)strlen(argv[i]);
@@ -103,6 +104,9 @@ int bedtobam_main(int argc, char* argv[]) {
         else if(PARAMETER_CHECK("-ubam", 5, parameterLength)) {
             uncompressedBam = true;
         }
+        else if(PARAMETER_CHECK("-seq", 4, parameterLength)) {
+            bedseq = true; // beisi xu
+        }
         else {
             cerr << endl << "*****ERROR: Unrecognized parameter: " << argv[i] << " *****" << endl << endl;
             showHelp = true;
@@ -128,7 +132,7 @@ int bedtobam_main(int argc, char* argv[]) {
         BedFile *bed       = new BedFile(bedFile);
         GenomeFile *genome = new GenomeFile(genomeFile);
 
-        ProcessBed(bed, genome, isBED12, mapQual, uncompressedBam);
+        ProcessBed(bed, genome, isBED12, mapQual, uncompressedBam, bedseq);
     }
     else {
         bedtobam_help();
@@ -154,6 +158,7 @@ void bedtobam_help(void) {
     cerr                    << "\t\tstring will reflect BED \"blocks\"." << endl << endl;
 
     cerr << "\t-ubam\t"     << "Write uncompressed BAM output. Default writes compressed BAM." << endl << endl;
+    cerr << "\t-seq\t"     << "Write sequence in bam file. Default not" << endl << endl;
 
     cerr << "Notes: " << endl;
     cerr << "\t(1)  BED files must be at least BED4 to create BAM (needs name field)." << endl << endl;
@@ -164,7 +169,7 @@ void bedtobam_help(void) {
 }
 
 
-void ProcessBed(BedFile *bed, GenomeFile *genome, bool isBED12, int mapQual, bool uncompressedBam) {
+void ProcessBed(BedFile *bed, GenomeFile *genome, bool isBED12, int mapQual, bool uncompressedBam, bool bedseq) {
 
     BamWriter *writer = new BamWriter();
 
@@ -190,7 +195,7 @@ void ProcessBed(BedFile *bed, GenomeFile *genome, bool isBED12, int mapQual, boo
         if (bed->_status == BED_VALID) {
             BamAlignment bamEntry;
             if (bed->bedType >= 4) {
-                ConvertBedToBam(bedEntry, bamEntry, chromToId, isBED12, mapQual, bed->_lineNum);
+                ConvertBedToBam(bedEntry, bamEntry, chromToId, isBED12, mapQual, bed->_lineNum, bedseq);
                 writer->SaveAlignment(bamEntry, true);
             }
             else {
@@ -206,7 +211,7 @@ void ProcessBed(BedFile *bed, GenomeFile *genome, bool isBED12, int mapQual, boo
 
 
 void ConvertBedToBam(const BED &bed, BamAlignment &bam, map<string, int, std::less<string> > &chromToId,
-                     bool isBED12, int mapQual, int lineNum) {
+                     bool isBED12, int mapQual, int lineNum, bool bedseq) {
 
     bam.Name       = bed.name;
     bam.Position   = bed.start;
@@ -219,8 +224,15 @@ void ConvertBedToBam(const BED &bed, BamAlignment &bam, map<string, int, std::le
     // so the sequence is inherently the same as it's
     // reference genome.
     // Thanks to James M. Ward for pointing this out.
+    if (!bedseq){
     bam.QueryBases = "";
     bam.Qualities  = "";
+    }
+    else{
+    string seq = bed.fields[bed.other_idxs[0]];
+    bam.QueryBases = seq;
+    bam.Qualities  = std::string(seq.size(), 'J');
+    }
 
     // chrom and map quality
     bam.RefID      = chromToId[bed.chrom];

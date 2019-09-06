@@ -20,7 +20,7 @@ BedGenomeCoverage::BedGenomeCoverage(string bedFile, string genomeFile,
                                      bool bamInput, bool obeySplits,
                                      bool filterByStrand, string requestedStrand,
                                      bool only_5p_end, bool only_3p_end,
-                                     bool pair_chip, bool haveSize, int fragmentSize, bool dUTP,
+                                     bool pair_chip, bool haveSize, string fragmentSize, bool dUTP,
                                      bool eachBaseZeroBased,
                                      bool add_gb_track_line, string gb_track_line_opts) {
 
@@ -41,12 +41,20 @@ BedGenomeCoverage::BedGenomeCoverage(string bedFile, string genomeFile,
     _only_5p_end = only_5p_end;
     _pair_chip_ = pair_chip;
     _haveSize = haveSize;
-    _fragmentSize = fragmentSize;
+    _fragmentSize_ext = fragmentSize;
     _dUTP = dUTP;
     _add_gb_track_line = add_gb_track_line;
     _gb_track_line_opts = gb_track_line_opts;
     _currChromName = "";
     _currChromSize = 0 ;
+    vector<string> _fragmentSizefield;
+
+    Tokenize(_fragmentSize_ext,_fragmentSizefield,':');
+
+    _fragmentSize = atoi(_fragmentSizefield[0].c_str());
+    if (_fragmentSizefield.size() > 1){
+        _fragcenter = atof(_fragmentSizefield[1].c_str())/2;
+    } else { _fragcenter = -2; }
 
 
     if (_bamInput == false) {
@@ -177,21 +185,44 @@ void BedGenomeCoverage::CoverageBed() {
             if (a.chrom != _currChromName)
                 StartNewChrom(a.chrom);
 
+            CHRPOS ext_start = a.start;
+            CHRPOS ext_end = a.end;
+            if (_haveSize && _fragmentSize > 0) {
+                if(a.strand == "-") {
+                    if(ext_end<_fragmentSize) { //sometimes fragmentSize is bigger :(
+                        ext_start = 0;
+                    } else {
+                        ext_start = ext_end - _fragmentSize;
+                    }
+                } else {
+                    ext_end = ext_start + _fragmentSize;
+                }
+            }
+            if (_fragcenter > -1){
+                float mid = float((float(ext_start) + float(ext_end) + 1)/2);
+                if (mid<_fragcenter) {
+                    ext_start = 0;
+                } else {
+                    ext_start = int(mid - _fragcenter);
+                }
+                ext_end = int(mid + _fragcenter);
+            }
+
             if (_obeySplits == true) {
                 bedVector bedBlocks; // vec to store the discrete BED "blocks"
                 GetBedBlocks(a, bedBlocks);
                 AddBlockedCoverage(bedBlocks);
             }
             else if (_only_5p_end) {
-                CHRPOS pos = ( a.strand=="+" ) ? a.start : a.end-1;
+                CHRPOS pos = ( a.strand=="+" ) ? ext_start : ext_end-1;
                 AddCoverage(pos,pos);
             }
             else if (_only_3p_end) {
-                CHRPOS pos = ( a.strand=="-" ) ? a.start : a.end-1;
+                CHRPOS pos = ( a.strand=="-" ) ? ext_start : ext_end-1;
                 AddCoverage(pos,pos);
             }
             else
-                AddCoverage(a.start, a.end-1);
+                AddCoverage(ext_start, ext_end-1);
         }
     }
     _bed->Close();
@@ -320,15 +351,29 @@ void BedGenomeCoverage::CoverageBam(string bamFile) {
                 AddCoverage(start, start + abs(bam.InsertSize) - 1);
             }
         } else if (_haveSize) {
-            if(bam.IsReverseStrand()) {
-                if(end<_fragmentSize) { //sometimes fragmentSize is bigger :(
-                    AddCoverage(0, end);
+            CHRPOS ext_start = start;
+            CHRPOS ext_end = end;
+            if (_fragmentSize > 0) {
+                if(bam.IsReverseStrand()) {
+                    if(ext_end<_fragmentSize) { //sometimes fragmentSize is bigger :(
+                        ext_start = 0;
+                    } else {
+                        ext_start = ext_end - _fragmentSize;
+                    }
                 } else {
-                    AddCoverage(end + 1 - _fragmentSize, end );
+                    ext_end = ext_start + _fragmentSize;
                 }
-            } else {
-                AddCoverage(start,start+_fragmentSize - 1);
             }
+            if (_fragcenter > -1){
+                float mid = float((float(ext_start) + float(ext_end) + 1)/2);
+                if (mid<_fragcenter) {
+                    ext_start = 0;
+                } else {
+                    ext_start = int(mid - _fragcenter);
+                }
+                ext_end = int(mid + _fragcenter);
+            }
+            AddCoverage(ext_start, ext_end - 1);
         } else
         // add coverage accordingly.
         if (!_only_5p_end && !_only_3p_end) {
