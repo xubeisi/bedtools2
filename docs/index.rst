@@ -1,3 +1,31 @@
+my-bedtools2 here is a bedtools2 variety with several customized additional options.
+
+It's developed by `Dr. Beisi Xu <https://github.com/xubeisi>`_ based on `bedtools 2.29.0 from Quinlan laboratory <https://github.com/arq5x/bedtools2/releases/tag/v2.29.0>`_
+
+================================================================
+Addtional Features
+================================================================
+
+.. tabularcolumns:: |p{6.5cm}|p{4.5cm}|p{8.5cm}|
+
+=====================   ===============   =================================================
+Command                 Options           Description
+=====================   ===============   =================================================
+**bamToBed**            **-bedpeseq**     Write BEDPE format with sequence
+**bedpeToBam**          **-seq**          Write BEDPE with sequence to bam file
+**bedToBam**            **-seq**          Write BED with sequence to bam file
+**genomeCoverageBed**   **-fs**           support BED addtional to BAM, took center of read
+=====================   ===============   =================================================
+
+.. toctree::
+   :maxdepth: 1
+
+   content/tools/bamtobed    
+   content/tools/bedtobam    
+   content/tools/genomecov  
+   
+
+
 ================================================================
 **bedtools**: *a powerful toolset for genome arithmetic*
 ================================================================

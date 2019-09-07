@@ -36,6 +36,7 @@ Option          Description
                 be set to "." and the start and end coordinates will be set 
                 to -1. *By default, this is disabled and the output will be 
                 reported in BED format*.
+**-bedpeseq**   Write sequence addtional to -bedpe
 **-mate1**      When writing BEDPE (-bedpe) format,
                 always report mate one as the first BEDPE "block".		 
 **-bed12**      Write "blocked" BED (a.k.a. BED12) format. This will convert 
