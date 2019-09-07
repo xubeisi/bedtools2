@@ -279,7 +279,8 @@ void genomecoverage_help(void) {
 
     cerr << "\t-fs\t\t" << "extend read to provided fragment size and/or use only center portion after extend" << endl;
     cerr << "\t\t\t" << "146(extend reads from 5\" to 146bp); -1:40(use center 40bp of read)" << endl;
-    cerr << "\t\t\t" << "146:40(extend to 146bp then use the center 40bp);" << endl << endl;
+    cerr << "\t\t\t" << "146:40(extend to 146bp then use the center 40bp);" << endl ;
+    cerr << "\t\t\t" << "10:1:8:1(adjust sense strand read to +5bp, anti-sense strand to -4bp);" << endl << endl;
 
     cerr << "\t-du\t\t" << "Change strand af the mate read (so both reads from the same strand) useful for strand specific" << endl;
     cerr << "\t\t\tWorks for BAM files only" << endl;

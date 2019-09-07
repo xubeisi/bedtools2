@@ -55,7 +55,14 @@ BedGenomeCoverage::BedGenomeCoverage(string bedFile, string genomeFile,
     if (_fragmentSizefield.size() > 1){
         _fragcenter = atof(_fragmentSizefield[1].c_str())/2;
     } else { _fragcenter = -2; }
+ 
+    if (_fragmentSizefield.size() > 2){
+        _fragmentSize_rev = atoi(_fragmentSizefield[2].c_str());
+    } else { _fragmentSize_rev = _fragmentSize; }
 
+    if (_fragmentSizefield.size() > 3){
+        _fragcenter_rev = atof(_fragmentSizefield[3].c_str())/2;
+    } else { _fragcenter_rev = _fragcenter; }
 
     if (_bamInput == false) {
         _genome = new GenomeFile(genomeFile);
@@ -187,18 +194,26 @@ void BedGenomeCoverage::CoverageBed() {
 
             CHRPOS ext_start = a.start;
             CHRPOS ext_end = a.end;
-            if (_haveSize && _fragmentSize > 0) {
-                if(a.strand == "-") {
-                    if(ext_end<_fragmentSize) { //sometimes fragmentSize is bigger :(
+            if (_haveSize) {
+                if (_fragmentSize_rev > 0 && a.strand == "-") {
+                    if(ext_end<_fragmentSize_rev) { //sometimes fragmentSize is bigger :(
                         ext_start = 0;
                     } else {
-                        ext_start = ext_end - _fragmentSize;
+                        ext_start = ext_end - _fragmentSize_rev;
                     }
-                } else {
+                } else if (_fragmentSize > 0 && a.strand != "-") {
                     ext_end = ext_start + _fragmentSize;
                 }
             }
-            if (_fragcenter > -1){
+            if (_fragcenter_rev > -1 && a.strand == "-"){
+                float mid = float((float(ext_start) + float(ext_end) + 1)/2);
+                if (mid<_fragcenter_rev) {
+                    ext_start = 0;
+                } else {
+                    ext_start = int(mid - _fragcenter_rev);
+                }
+                ext_end = int(mid + _fragcenter_rev);
+            } else if (_fragcenter > -1 && a.strand != "-"){
                 float mid = float((float(ext_start) + float(ext_end) + 1)/2);
                 if (mid<_fragcenter) {
                     ext_start = 0;
@@ -353,18 +368,24 @@ void BedGenomeCoverage::CoverageBam(string bamFile) {
         } else if (_haveSize) {
             CHRPOS ext_start = start;
             CHRPOS ext_end = end;
-            if (_fragmentSize > 0) {
-                if(bam.IsReverseStrand()) {
-                    if(ext_end<_fragmentSize) { //sometimes fragmentSize is bigger :(
-                        ext_start = 0;
-                    } else {
-                        ext_start = ext_end - _fragmentSize;
-                    }
+            if (_fragmentSize_rev > 0 && bam.IsReverseStrand()) {
+                if(ext_end<_fragmentSize_rev) { //sometimes fragmentSize is bigger :(
+                    ext_start = 0;
                 } else {
-                    ext_end = ext_start + _fragmentSize;
+                    ext_start = ext_end - _fragmentSize_rev;
                 }
+            } else if (_fragmentSize > 0 && !bam.IsReverseStrand()) {
+                ext_end = ext_start + _fragmentSize;
             }
-            if (_fragcenter > -1){
+            if (_fragcenter_rev > -1 && bam.IsReverseStrand()) {
+                float mid = float((float(ext_start) + float(ext_end) + 1)/2);
+                if (mid<_fragcenter_rev) {
+                    ext_start = 0;
+                } else {
+                    ext_start = int(mid - _fragcenter_rev);
+                }
+                ext_end = int(mid + _fragcenter_rev);
+            } else if (_fragcenter > -1 && !bam.IsReverseStrand()) {
                 float mid = float((float(ext_start) + float(ext_end) + 1)/2);
                 if (mid<_fragcenter) {
                     ext_start = 0;

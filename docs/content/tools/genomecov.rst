@@ -67,7 +67,7 @@ Usage and option summary
 **-pc**                          | Calculates coverage of intervals from left point of a pair reads to the right point.
                                  | Works for BAM files only
 **-fs**                          | Forces to use fragment size instead of read length
-                                 | Works for BAM files only
+                                 | format as +strand_extend:+strand_center:-strand_extend:-strand_center
 
 ===========================      ===============================================================================================================================================================================================================
 
@@ -359,7 +359,7 @@ The coverage "by estimated fragments" or by actual pair-end fragments graph is e
 
 
 ``-fs`` Forces to use provided fragment size and/or center portion
-Format as fragmentsize(default -1):center(default -1)
+Format as fragmentsize(+strand, default -1):center(+strand, default -1):fragmentsize(-strand, default -1):center(-strand, default -1):
 
 For example:
 

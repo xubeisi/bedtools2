@@ -77,6 +77,8 @@ private:
     bool _dUTP;
     int _fragmentSize;
     float _fragcenter;
+    int _fragmentSize_rev;
+    float _fragcenter_rev;
     string _fragmentSize_ext;
     bool _add_gb_track_line;
     string _gb_track_line_opts;
