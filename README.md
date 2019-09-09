@@ -5,7 +5,7 @@ bedtools - the swiss army knife for genome arithmetic
 
 [Download current version](https://github.com/arq5x/bedtools2/releases/latest)
 
-[Documentation](http://bedtools.readthedocs.org)
+[Documentation](https://my-bedtools2.readthedocs.io)
 
 Summary
 -------
@@ -35,9 +35,10 @@ Maintained by the Quinlan Laboratory at the University of Virginia.
 
 1. **Lead developers**:           Aaron Quinlan, Hao Hoou, Brent Pedersen, Neil Kindlon
 2. **Significant contributions**: Assaf Gordon, Royden Clark, John Marshall, Brent Pedersen, Ryan Dale
-3. **Repository**:                https://github.com/arq5x/bedtools2
-4. **Stable releases**:           https://github.com/arq5x/bedtools2/releases
-5. **Documentation**:             http://bedtools.readthedocs.org
+3. **Repository**:                https://github.com/xubeisi/bedtools2
+3. **Original Repository**:                https://github.com/arq5x/bedtools2
+4. **Stable Original releases**:           https://github.com/arq5x/bedtools2/releases
+5. **Documentation**:             https://my-bedtools2.readthedocs.io
 6. **License**:                   Released under MIT license
 
 
