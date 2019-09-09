@@ -24,7 +24,8 @@ samtools view -Sb three_blocks.sam > three_blocks.bam 2>/dev/null
 #samtools view -Sb sam-w-del.sam > sam-w-del.bam 2>/dev/null
 samtools view -Sb two_blocks_w_D.sam > two_blocks_w_D.bam 2>/dev/null
 samtools view -Sb numeric_tag.sam > numeric_tag.bam 2> /dev/null
-gzip -dfc extra-long-header.sam | samtools view -Sb > extra-long-header.bam 2> /dev/null
+samtools view -Sb bedpe.sam > bedpe.bam 2> /dev/null
+gzip -dfc extra-long-header.sam.gz | samtools view -Sb /dev/stdin > extra-long-header.bam 2> /dev/null
 
 
 ##################################################################
@@ -201,6 +202,36 @@ $BT bamtobed -tag NM -i extra-long-header.bam > obs
 check exp obs
 rm exp obs
 
+##################################################################
+#  Test -seq
+##################################################################
+echo -e "    bamtobed.t14 -seq...\c"
+echo \
+"chr20	62580871	62580972	ATAC/1	255	+	CTGCAAGAGTCACCCCCGGGGCCACCCCTCCCAGCAGGTGGTGATGGATGGCCCGCAGCTGTGCACAGTGGGGCAGTCCTGCTTAGGTTCAGCAGCAGGTT
+chr20	62581438	62581539	ATAC/2	255	-	TTCTGCTGGGAGTGATGCCCATGCAGCGGACCGGTCACAAGCAGGCCAGGACGATCTGCCAGAAGCCCGCCTCACCGCAGGCCTGTGACGGCGTCAGGCTG" > exp
+$BT bamtobed -seq -i bedpe.bam > obs
+check obs exp
+rm obs exp
+
+##################################################################
+#  Test -bedpe
+##################################################################
+echo -e "    bamtobed.t15 -bedpe...\c"
+echo \
+"chr20	62580871	62580972	chr20	62581438	62581539	ATAC	255	+	-" > exp
+$BT bamtobed -bedpe -i bedpe.bam > obs
+check obs exp
+rm obs exp
+
+##################################################################
+#  Test -bedpeseq
+##################################################################
+echo -e "    bamtobed.t16 -bedpeseq...\c"
+echo \
+"chr20	62580871	62580972	chr20	62581438	62581539	ATAC	255	+	-	CTGCAAGAGTCACCCCCGGGGCCACCCCTCCCAGCAGGTGGTGATGGATGGCCCGCAGCTGTGCACAGTGGGGCAGTCCTGCTTAGGTTCAGCAGCAGGTT	TTCTGCTGGGAGTGATGCCCATGCAGCGGACCGGTCACAAGCAGGCCAGGACGATCTGCCAGAAGCCCGCCTCACCGCAGGCCTGTGACGGCGTCAGGCTG" > exp
+$BT bamtobed -bedpeseq -i bedpe.bam > obs
+check obs exp
+rm obs exp
 
 rm *.bam
 

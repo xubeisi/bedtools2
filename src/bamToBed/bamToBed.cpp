@@ -40,7 +40,7 @@ void ConvertBamToBed(const string &bamFile, bool useEditDistance,
                      const string &bamTag, bool writeBed12, 
                      bool obeySplits, bool splitOnDeletions, 
                      const string &color, bool useCigar,
-                     bool useNovoalign, bool useBWA);
+                     bool useNovoalign, bool useBWA, bool writeBedseq);
                      
 void ConvertBamToBedpe(const string &bamFile, 
                        const bool &useEditDistance, bool mate1First, bool writeBedPEseq);
@@ -51,12 +51,12 @@ void PrintBed(const BamAlignment &bam, const RefVector &refs,
               bool useEditDistance, const string &bamTag, 
               bool obeySplits, bool splitOnDeletions, 
               bool useCigar, bool useNovoalign, 
-              bool useBWA);
+              bool useBWA, bool writeBedseq);
               
 void PrintBed12(const BamAlignment &bam, const RefVector &refs, 
                 bool useEditDistance, const string &bamTag,
                 bool obeySplits, bool splitOnDeletions, 
-                string color = "255,0,0");
+                bool writeBedseq, string color = "255,0,0");
 
 void PrintBedPE(const BamAlignment &bam1, const BamAlignment &bam2,
                 const RefVector &refs, bool useEditDistance, bool mate1First,
@@ -85,6 +85,7 @@ int bamtobed_main(int argc, char* argv[]) {
     bool haveOtherTag      = false;
     bool writeBedPE        = false;
     bool writeBedPEseq     = false;
+    bool writeBedseq     = false;
     bool writeBed12        = false;
     bool useEditDistance   = false;
     bool useAlignmentScore = false;
@@ -121,6 +122,9 @@ int bamtobed_main(int argc, char* argv[]) {
         }
         else if(PARAMETER_CHECK("-bedpe", 6, parameterLength)) {
             writeBedPE = true;
+        }
+        else if(PARAMETER_CHECK("-seq", 4, parameterLength)) {
+            writeBedseq = true;
         }
         else if(PARAMETER_CHECK("-bedpeseq", 9, parameterLength)) {
             writeBedPEseq = true;
@@ -225,7 +229,7 @@ int bamtobed_main(int argc, char* argv[]) {
                             tag, writeBed12, 
                             obeySplits, splitOnDeletions, 
                             color, useCigar,
-                            useNovoalign, useBWA);
+                            useNovoalign, useBWA, writeBedseq);
         else
             ConvertBamToBedpe(bamFile, useEditDistance, mate1First, writeBedPEseq);
     }
@@ -246,6 +250,7 @@ void bamtobed_help(void) {
 
     cerr << "Options: " << endl;
 
+    cerr << "\t-seq\t"      << "Write sequence at the end" << endl;
     cerr << "\t-bedpe\t"      << "Write BEDPE format." << endl;
     cerr                      << "\t\t- Requires BAM to be grouped or sorted by query." << endl << endl;
 
@@ -288,7 +293,8 @@ void bamtobed_help(void) {
 
 void ConvertBamToBed(const string &bamFile, bool useEditDistance, const string &bamTag,
                      bool writeBed12, bool obeySplits, bool splitOnDeletions, 
-                     const string &color, bool useCigar, bool useNovoalign, bool useBWA) 
+                     const string &color, bool useCigar, bool useNovoalign, 
+                     bool useBWA, bool writeBedseq)
 {
     
     // open the BAM file
@@ -308,10 +314,10 @@ void ConvertBamToBed(const string &bamFile, bool useEditDistance, const string &
         if (bam.IsMapped() == true) {
             if (writeBed12 == false)                 // BED
                 PrintBed(bam, refs, useEditDistance, bamTag, obeySplits, splitOnDeletions,
-                         useCigar, useNovoalign, useBWA);
+                         useCigar, useNovoalign, useBWA,  writeBedseq); // beisi
             else                                     //"blocked" BED
                 PrintBed12(bam, refs, useEditDistance, bamTag, obeySplits, splitOnDeletions,
-                           color);
+                           writeBedseq, color); // beisi
         }
     }
     reader.Close();
@@ -407,7 +413,7 @@ void PrintBed(const BamAlignment &bam,  const RefVector &refs,
               bool useEditDistance, const string &bamTag, 
               bool obeySplits, bool splitOnDeletions,
               bool useCigar, bool useNovoalign, 
-              bool useBWA) 
+              bool useBWA, bool writeBedseq) 
 {
     // set the strand
     string strand = "+";
@@ -420,6 +426,10 @@ void PrintBed(const BamAlignment &bam,  const RefVector &refs,
 
     // get the unpadded (parm = false) end position based on the CIGAR
     unsigned int alignmentEnd = bam.GetEndPosition(false, false);
+
+    if (writeBedseq) {
+       strand += "\t" + bam.QueryBases;
+    }
 
     // report the entire BAM footprint as a single BED entry
     if (obeySplits == false) {
@@ -538,7 +548,7 @@ void PrintBed(const BamAlignment &bam,  const RefVector &refs,
 void PrintBed12(const BamAlignment &bam, const RefVector &refs, 
                 bool useEditDistance, const string &bamTag, 
                 bool obeySplits, bool splitOnDeletions,
-                string color) 
+                bool writeBedseq, string color) 
 {
 
     // set the strand
@@ -593,7 +603,13 @@ void PrintBed12(const BamAlignment &bam, const RefVector &refs,
     for (b = 0; b < bedBlocks.size() - 1; ++b) {
         printf("%" PRId_CHRPOS ",", bedBlocks[b].start - bam.Position);
     }
-    printf("%" PRId_CHRPOS "\n", bedBlocks[b].start - bam.Position);
+
+    if (writeBedseq) {
+        printf("%s\t%" PRId_CHRPOS "\n", bam.QueryBases.c_str(), bedBlocks[b].start - bam.Position);
+    }
+    else {
+        printf("%" PRId_CHRPOS "\n", bedBlocks[b].start - bam.Position);
+    }
 }
 
 
