@@ -372,8 +372,9 @@ void BedGenomeCoverage::CoverageBam(string bamFile) {
                 if(ext_end<_fragmentSize_rev) { //sometimes fragmentSize is bigger :(
                     ext_start = 0;
                 } else {
-                    ext_start = ext_end - _fragmentSize_rev;
+                    ext_start = ext_end - _fragmentSize_rev + 1;
                 }
+                ext_end = ext_end + 1;
             } else if (_fragmentSize > 0 && !bam.IsReverseStrand()) {
                 ext_end = ext_start + _fragmentSize;
             }

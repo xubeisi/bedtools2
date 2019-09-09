@@ -199,14 +199,16 @@ rm obs exp
 ##################################################################
 echo -e "    genomecov.t11...\c"
 echo \
-"1	0	93	100	0.93
-1	1	4	100	0.04
-1	2	3	100	0.03
-2	0	100	100	1
-3	0	100	100	1
-genome	0	293	300	0.976667
+"chr1	0	91	100	0.91
+chr1	1	4	100	0.04
+chr1	2	3	100	0.03
+chr1	3	2	100	0.02
+chr2	0	100	100	1
+chr3	0	100	100	1
+genome	0	291	300	0.97
 genome	1	4	300	0.0133333
-genome	2	3	300	0.01" > exp
+genome	2	3	300	0.01
+genome	3	2	300	0.00666667" > exp
 $BT genomecov -i y.bed -g genome.txt > obs
 check obs exp
 rm obs exp
@@ -216,9 +218,11 @@ rm obs exp
 ##################################################################
 echo -e "    genomecov.t12...\c"
 echo \
-"1	15	17	1
-1	17	20	2
-1	20	22	1" > exp
+"chr1	15	17	1
+chr1	17	18	2
+chr1	18	20	3
+chr1	20	22	2
+chr1	22	24	1" > exp
 $BT genomecov -i y.bed -g genome.txt -bg > obs
 check obs exp
 rm obs exp
@@ -228,13 +232,15 @@ rm obs exp
 ##################################################################
 echo -e "    genomecov.t13...\c"
 echo \
-"1	0	15	0
-1	15	17	1
-1	17	20	2
-1	20	22	1
-1	22	100	0
-2	0	100	0
-3	0	100	0" > exp
+"chr1	0	15	0
+chr1	15	17	1
+chr1	17	18	2
+chr1	18	20	3
+chr1	20	22	2
+chr1	22	24	1
+chr1	24	100	0
+chr2	0	100	0
+chr3	0	100	0" > exp
 $BT genomecov -i y.bed -g genome.txt -bga > obs
 check obs exp
 rm obs exp
@@ -252,20 +258,47 @@ rm obs exp
 ##################################################################
 #  Test chip fragmentSize
 ##################################################################
-echo -e "    genomecov.t15...\c"
+echo -e "    genomecov.t15 -bg -fs 5...\c"
 echo \
-"chr1	1	101	1
-chr1	200	300	1" > exp
-$BT genomecov -ibam chip.bam -bg -fs 100 > obs
+"chr1	1	6	1
+chr1	295	300	1" > exp
+$BT genomecov -ibam chip.bam -bg -fs 5 > obs
 check obs exp
 rm obs exp
+
+echo -e "    genomecov.t16 -bg -fs 5:3 ...\c"
+echo \
+"chr1	2	5	1
+chr1	296	299	1" > exp
+$BT genomecov -ibam chip.bam -bg -fs 5:3 > obs
+check obs exp
+rm obs exp
+
+echo -e "    genomecov.t17 -bg -fs 5:3:4 ...\c"
+echo \
+"chr1	2	5	1
+chr1	297	300	1" > exp
+$BT genomecov -ibam chip.bam -bg -fs 5:3:4 > obs
+check obs exp
+rm obs exp
+
+echo -e "    genomecov.t18 -bg -fs 5:3:4:2 ...\c"
+echo \
+"chr1	2	5	1
+chr1	297	299	1" > exp
+$BT genomecov -ibam chip.bam -bg -fs 5:3:4:2 > obs
+check obs exp
+rm obs exp
+
+
+
 
 rm one_block.bam two_blocks.bam three_blocks.bam sam-w-del.bam pair-chip.bam chip.bam
 
 ##################################################################
 #  Make sure empty bam doesn't cause failure
 ##################################################################
-echo -e "    genomecov.t16...\c"
+echo -e "    genomecov.t19...\c"
 echo \
 "1	0	100	100	1
 2	0	100	100	1
@@ -278,7 +311,7 @@ rm obs exp
 ##################################################################
 #  Make sure empty CRAM doesn't cause failure
 ##################################################################
-echo -e "    genomecov.t17...\c"
+echo -e "    genomecov.t20...\c"
 echo \
 "chr1	0	50000	50000	1
 genome	0	50000	50000	1" > exp
