@@ -24,6 +24,7 @@ samtools view -Sb three_blocks.sam > three_blocks.bam 2>/dev/null
 samtools view -Sb sam-w-del.sam > sam-w-del.bam 2>/dev/null
 samtools view -Sb pair-chip.sam > pair-chip.bam 2>/dev/null
 samtools view -Sb chip.sam > chip.bam 2>/dev/null
+samtools view -Sb chip2.sam > chip2.bam 2>/dev/null
 
 
 
@@ -199,16 +200,20 @@ rm obs exp
 ##################################################################
 echo -e "    genomecov.t11...\c"
 echo \
-"chr1	0	91	100	0.91
-chr1	1	4	100	0.04
-chr1	2	3	100	0.03
-chr1	3	2	100	0.02
-chr2	0	100	100	1
-chr3	0	100	100	1
-genome	0	291	300	0.97
-genome	1	4	300	0.0133333
-genome	2	3	300	0.01
-genome	3	2	300	0.00666667" > exp
+"chr1	0	391	400	0.9775
+chr1	1	4	400	0.01
+chr1	2	3	400	0.0075
+chr1	3	2	400	0.005
+chr2	0	93	100	0.93
+chr2	1	1	100	0.01
+chr2	3	6	100	0.06
+chr3	0	86	100	0.86
+chr3	1	14	100	0.14
+chr4	0	100	100	1
+genome	0	670	700	0.957143
+genome	1	19	700	0.0271429
+genome	2	3	700	0.00428571
+genome	3	8	700	0.0114286" > exp
 $BT genomecov -i y.bed -g genome.txt > obs
 check obs exp
 rm obs exp
@@ -222,7 +227,10 @@ echo \
 chr1	17	18	2
 chr1	18	20	3
 chr1	20	22	2
-chr1	22	24	1" > exp
+chr1	22	24	1
+chr2	27	28	1
+chr2	28	34	3
+chr3	20	34	1" > exp
 $BT genomecov -i y.bed -g genome.txt -bg > obs
 check obs exp
 rm obs exp
@@ -238,9 +246,15 @@ chr1	17	18	2
 chr1	18	20	3
 chr1	20	22	2
 chr1	22	24	1
-chr1	24	100	0
-chr2	0	100	0
-chr3	0	100	0" > exp
+chr1	24	400	0
+chr2	0	27	0
+chr2	27	28	1
+chr2	28	34	3
+chr2	34	100	0
+chr3	0	20	0
+chr3	20	34	1
+chr3	34	100	0
+chr4	0	100	0" > exp
 $BT genomecov -i y.bed -g genome.txt -bga > obs
 check obs exp
 rm obs exp
@@ -293,7 +307,6 @@ rm obs exp
 
 
 
-rm one_block.bam two_blocks.bam three_blocks.bam sam-w-del.bam pair-chip.bam chip.bam
 
 ##################################################################
 #  Make sure empty bam doesn't cause failure
@@ -309,14 +322,31 @@ check obs exp
 rm obs exp
 
 ##################################################################
-#  Make sure empty CRAM doesn't cause failure
+#  Test order by genome
 ##################################################################
-echo -e "    genomecov.t20...\c"
+echo -e "    genomecov.t20 -o  'bed file order by genome' ...\c"
 echo \
-"chr1	0	50000	50000	1
-genome	0	50000	50000	1" > exp
-CRAM_REFERENCE=test_ref.fa $BT genomecov -ibam empty.cram > obs
+"chr3	20	34	1
+chr2	27	28	1
+chr2	28	34	3
+chr1	15	17	1
+chr1	17	18	2
+chr1	18	20	3
+chr1	20	22	2
+chr1	22	24	1" > exp
+$BT genomecov -i y.bed -g genome.txt -bg -o > obs
 check obs exp
 rm obs exp
+
+echo -e "    genomecov.t21 -o  'bam file order by genome' ...\c"
+echo \
+"chr3	21	96	1
+chr1	1	76	1
+chr1	225	300	1" > exp
+$BT genomecov -ibam chip2.bam -g genome.txt -bg -o > obs
+check obs exp
+rm obs exp
+
+rm one_block.bam two_blocks.bam three_blocks.bam sam-w-del.bam pair-chip.bam chip.bam chip2.bam
 
 [[ $FAILURES -eq 0 ]] || exit 1;

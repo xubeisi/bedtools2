@@ -53,6 +53,7 @@ int genomecoverage_main(int argc, char* argv[]) {
     bool only_5p_end = false;
     bool only_3p_end = false;
     bool add_gb_track_line = false;
+    bool orderchrom = false;
     string gb_track_opts;
     string requestedStrand = "X";
 
@@ -160,6 +161,9 @@ int genomecoverage_main(int argc, char* argv[]) {
         else if(PARAMETER_CHECK("-du", 3, parameterLength)) {
             dUTP = true;
         }
+        else if(PARAMETER_CHECK("-o", 2, parameterLength)) {
+            orderchrom = true;
+        }
         else if(PARAMETER_CHECK("-trackline", 10, parameterLength)) {
                 add_gb_track_line = true;
         }
@@ -186,7 +190,9 @@ int genomecoverage_main(int argc, char* argv[]) {
     }
     // make sure we have both input files
     if (bamInput && haveGenome) {
-      cerr << endl << "*****" << endl << "*****WARNING: Genome (-g) files are ignored when BAM input is provided. " << endl << "*****" << endl;
+        if (!orderchrom) {
+            cerr << endl << "*****" << endl << "*****WARNING: Genome (-g) files are ignored when BAM input is provided. " << endl << "*****" << endl;
+        }
     }
     if (bedGraph && eachBase) {
       cerr << endl << "*****" << endl << "*****ERROR: Use -d/-dz or -bg, not both" << endl << "*****" << endl;
@@ -224,8 +230,8 @@ int genomecoverage_main(int argc, char* argv[]) {
                                                       filterByStrand, requestedStrand,
                                                       only_5p_end, only_3p_end,
                                                       pair_chip, haveSize, fragmentSize, dUTP,
-                                                      eachBaseZeroBased,
-                                                      add_gb_track_line, gb_track_opts);
+                                                      eachBaseZeroBased, add_gb_track_line,
+                                                      orderchrom, gb_track_opts);
         delete bc;
     }
     else {
@@ -299,6 +305,8 @@ void genomecoverage_help(void) {
     cerr << "\t\t\tUseful for normalizing coverage by, e.g., reads per million (RPM)." << endl;
     cerr << "\t\t\t- Default is 1.0; i.e., unscaled." << endl;
     cerr << "\t\t\t- (FLOAT)" << endl << endl;
+
+    cerr << "\t-o\t\t" << "Order chrom by genome file" << endl << endl;
 
     cerr << "\t-trackline\t" << "Adds a UCSC/Genome-Browser track line definition in the first line of the output." << endl;
     cerr <<"\t\t\t- See here for more details about track line definition:" << endl;

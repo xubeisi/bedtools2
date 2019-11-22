@@ -12,6 +12,7 @@ Addtional Features
 Command                 Options           Description
 =====================   ===============   =================================================
 **bamToBed**            **-bedpeseq**     Write BEDPE format with sequence
+**bamToBed**            **-seq**          Write BED format with sequence
 **bedpeToBam**          **-seq**          Write BEDPE with sequence to bam file
 **bedToBam**            **-seq**          Write BED with sequence to bam file
 **genomeCoverageBed**   **-fs**           support BED addtional to BAM, took center of read

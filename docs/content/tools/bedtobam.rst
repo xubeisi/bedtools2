@@ -21,6 +21,7 @@ Usage:
 **-mapq**				         Set a mapping quality (SAM MAPQ field) value for all BED entries. *Default: 255*			 
 **-ubam**					     Write uncompressed BAM output. The default is write compressed BAM output.
 **-bed12**                       Indicate that the input BED file is in BED12 (a.k.a "blocked" BED) format. In this case, bedToBam will convert blocked BED features (e.g., gene annotations) into "spliced" BAM alignments by creating an appropriate CIGAR string.
+**-seq**                         Took sequence from last column of BED6 and write to bam
 ===========================      ===============================================================================================================================================================================================================
 
 
@@ -49,6 +50,30 @@ The default behavior is to assume that the input file is in unblocked format. Fo
   ALR/Alpha  0   chr21 9726022  255  3288M *  0  0  *  *
   L1PA3      16  chr21 9729321  255  489M  *  0  0  *  *
  
+
+==========================================================================
+``-seq`` Take BED6 format followed by sequence and write to bam
+==========================================================================
+Add sequence to the default bed format.
+
+.. code-block:: bash
+
+  bedtools bamtobed -seq -i reads.bam | head -2 > reads.bed
+
+  cat reads.bed
+  chr20 62580871 62580972 ATAC/1 255 + CTGCAAGAGTCACCCCCGGGGCCACCCCTCCCAGCAGGTGGTGATGGATGGCCCGCAGCTGTGCACAGTGGGGCAGTCCTGCTTAGGTTCAGCAGCAGGTT
+  chr20 62581438 62581539 ATAC/2 255 - TTCTGCTGGGAGTGATGCCCATGCAGCGGACCGGTCACAAGCAGGCCAGGACGATCTGCCAGAAGCCCGCCTCACCGCAGGCCTGTGACGGCGTCAGGCTG
+
+  bedToBam -i reads.bed -seq -g human.hg18.genome > reads.withseq.bam
+  bedToBam -i reads.bed -g human.hg18.genome > reads.noseq.bam
+
+  samtools view reads.withseq.bam
+  ATAC/1 0 chr20 62580872 255 101M * 0 0 CTGCAAGAGTCACCCCCGGGGCCACCCCTCCCAGCAGGTGGTGATGGATGGCCCGCAGCTGTGCACAGTGGGGCAGTCCTGCTTAGGTTCAGCAGCAGGTT JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+  ATAC/2 16 chr20 62581439 255 101M * 0 0 TTCTGCTGGGAGTGATGCCCATGCAGCGGACCGGTCACAAGCAGGCCAGGACGATCTGCCAGAAGCCCGCCTCACCGCAGGCCTGTGACGGCGTCAGGCTG JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
+
+  samtools view reads.noseq.bam
+  ATAC/1 0 chr20 62580872 255 101M * 0 0 * *
+  ATAC/2 16 chr20 62581439 255 101M * 0 0 * *
 
 ==========================================================================
 Creating "spliced" BAM entries from "blocked" BED features

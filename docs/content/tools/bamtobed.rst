@@ -26,6 +26,7 @@ Usage and option summary
 =============   ================================================================
 Option          Description
 =============   ================================================================
+**-seq**        Write sequence addtional to bed6
 **-bedpe**      Write BAM alignments in BEDPE format. Only one alignment from 
                 paired-end reads will be reported. Specifically, it each mate 
                 is aligned to the same chromosome, the BAM alignment reported 
@@ -37,7 +38,6 @@ Option          Description
                 to -1. *By default, this is disabled and the output will be 
                 reported in BED format*.
 **-bedpeseq**   Write sequence addtional to -bedpe
-**-seq**        Write sequence addtional to bed6
 **-mate1**      When writing BEDPE (-bedpe) format,
                 always report mate one as the first BEDPE "block".		 
 **-bed12**      Write "blocked" BED (a.k.a. BED12) format. This will convert 
@@ -75,6 +75,16 @@ to the name.
   chr7   118965072   118965122   TUPAC_0001:3:1:0:1452#0/2   37   +
   chr11  46769934    46769984    TUPAC_0001:3:1:0:1472#0/1   37   -
 
+==========================================================================
+``-seq`` Add sequence to bed
+==========================================================================
+Add sequence to the default bed format.
+
+.. code-block:: bash
+
+  $ bedtools bamtobed -seq -i reads.bam | head -2
+  chr20 62580871 62580972 ATAC/1 255 + CTGCAAGAGTCACCCCCGGGGCCACCCCTCCCAGCAGGTGGTGATGGATGGCCCGCAGCTGTGCACAGTGGGGCAGTCCTGCTTAGGTTCAGCAGCAGGTT
+  chr20 62581438 62581539 ATAC/2 255 - TTCTGCTGGGAGTGATGCCCATGCAGCGGACCGGTCACAAGCAGGCCAGGACGATCTGCCAGAAGCCCGCCTCACCGCAGGCCTGTGACGGCGTCAGGCTG
 
 ==========================================================================
 ``-tag`` Set the score field based on BAM tags
@@ -117,7 +127,7 @@ be set to -1.
 
 .. code-block:: bash
  
-  $ bedtools bamtobed -i reads.ba -bedpe | head -3
+  $ bedtools bamtobed -i reads.bam -bedpe | head -3
   chr7   118965072   118965122   chr7   118970079   118970129 TUPAC_0001:3:1:0:1452#0 37     +     -
   chr11  46765606    46765656    chr11  46769934    46769984 TUPAC_0001:3:1:0:1472#0 37     +     -
   chr20  54704674    54704724    chr20  54708987    54709037 TUPAC_0001:3:1:1:1833#0 37     +    
@@ -141,7 +151,28 @@ BED format.
   chrX   131756978   131757028   TUPAC_0001:3:1:2:523#0/1    37   +
   chrX   131761790   131761840   TUPAC_0001:3:1:2:523#0/2    37   -
 
-  
+==========================================================================
+``-bedpeseq`` Add sequences for -bedpe
+==========================================================================
+The ``-bedpeseq`` option converts BAM alignments to BEDPE format with two addtional
+columns as sequences for the first mate and second mate
+
+.. note::
+
+    When using this option, it is required that the BAM 
+    file is sorted/grouped by the read name. This allows bamToBed 
+    to extract correct alignment coordinates for each end based on 
+    their respective CIGAR strings. It also assumes that the 
+    alignments for a given pair come in groups of twos. There is 
+    not yet a standard method for reporting multiple alignments 
+    using BAM. bamToBed will fail if an aligner does not report 
+    alignments in pairs.		
+
+.. code-block:: bash
+ 
+  $ bedtools bamtobed -i reads.bam -bedpeseq | head -1
+  chr20 62580871 62580972 chr20 62581438 62581539 ATAC 255 + - CTGCAAGAGTCACCCCCGGGGCCACCCCTCCCAGCAGGTGGTGATGGATGGCCCGCAGCTGTGCACAGTGGGGCAGTCCTGCTTAGGTTCAGCAGCAGGTT TTCTGCTGGGAGTGATGCCCATGCAGCGGACCGGTCACAAGCAGGCCAGGACGATCTGCCAGAAGCCCGCCTCACCGCAGGCCTGTGACGGCGTCAGGCTG
+
 ==================================================================
 ``-split`` Creating BED12 features from "spliced" BAM entries. 
 ==================================================================

@@ -21,8 +21,8 @@ BedGenomeCoverage::BedGenomeCoverage(string bedFile, string genomeFile,
                                      bool filterByStrand, string requestedStrand,
                                      bool only_5p_end, bool only_3p_end,
                                      bool pair_chip, bool haveSize, string fragmentSize, bool dUTP,
-                                     bool eachBaseZeroBased,
-                                     bool add_gb_track_line, string gb_track_line_opts) {
+                                     bool eachBaseZeroBased, bool add_gb_track_line,
+                                     bool orderchrom, string gb_track_line_opts) {
 
     _bedFile = bedFile;
     _genomeFile = genomeFile;
@@ -43,6 +43,7 @@ BedGenomeCoverage::BedGenomeCoverage(string bedFile, string genomeFile,
     _haveSize = haveSize;
     _fragmentSize_ext = fragmentSize;
     _dUTP = dUTP;
+    _orderchrom = orderchrom;
     _add_gb_track_line = add_gb_track_line;
     _gb_track_line_opts = gb_track_line_opts;
     _currChromName = "";
@@ -65,7 +66,7 @@ BedGenomeCoverage::BedGenomeCoverage(string bedFile, string genomeFile,
     } else { _fragcenter_rev = _fragcenter; }
 
     if (_bamInput == false) {
-        _genome = new GenomeFile(genomeFile);
+        _genome = new GenomeFile(_genomeFile);
     }
 
     PrintTrackDefinitionLine();
@@ -77,6 +78,14 @@ BedGenomeCoverage::BedGenomeCoverage(string bedFile, string genomeFile,
     else {
         CoverageBam(_bedFile);
     }
+}
+
+string BedGenomeCoverage::gettmpfile(const string &chrom) {
+    chromToFiles::const_iterator chromIt = _orderchrom_tmp_files.find(chrom);
+    if (chromIt != _orderchrom_tmp_files.end())
+        return chromIt->second;
+    else
+        return "";  // chrom not found.
 }
 
 void BedGenomeCoverage::PrintTrackDefinitionLine()
@@ -111,7 +120,7 @@ void BedGenomeCoverage::ResetChromCoverage() {
 
 void BedGenomeCoverage::StartNewChrom(const string& newChrom) {
     // If we've moved beyond the first encountered chromosomes,
-    // process the results of the previous chromosome.
+    // process the results of the previous chromosome
     if (_currChromName.length() > 0) {
         ReportChromCoverage(_currChromCoverage, _currChromSize,
                 _currChromName, _currChromDepthHist);
@@ -280,6 +289,24 @@ void BedGenomeCoverage::PrintEmptyChromosomes()
 
 void BedGenomeCoverage::PrintFinalCoverage()
 {
+    if (_orderchrom) {
+        // get the list of chromosome names in the genome
+        vector<string> chromList = _genome->getChromList();
+
+        vector<string>::const_iterator chromItr = chromList.begin();
+        vector<string>::const_iterator chromEnd = chromList.end();
+        for (; chromItr != chromEnd; ++chromItr) {
+            string chrom = *chromItr;
+            string nametmp = gettmpfile(chrom);
+            if (nametmp != "") {
+                std::ifstream __cin(nametmp.c_str(), ios::in);
+                if (__cin &&  __cin.peek() != std::ifstream::traits_type::eof()){
+                    cout << __cin.rdbuf();
+                }
+                unlink(nametmp.c_str());
+            }
+        }
+    }
     if (_eachBase == false && _bedGraph == false && _bedGraphAll == false) {
         ReportGenomeCoverage(_currChromDepthHist);
     }
@@ -301,8 +328,13 @@ void BedGenomeCoverage::CoverageBam(string bamFile) {
     string header = reader.GetHeaderText();
     RefVector refs = reader.GetReferenceData();
 
-    // load the BAM header references into a BEDTools "genome file"
-    _genome = new GenomeFile(refs);
+    if (_orderchrom) {
+        // if need order by genome file, ignore BAM header
+        _genome = new GenomeFile(_genomeFile);
+    } else {
+        // load the BAM header references into a BEDTools "genome file"
+        _genome = new GenomeFile(refs);
+    }
     // convert each aligned BAM entry to BED
     // and compute coverage on B
     BamAlignment bam;
@@ -435,6 +467,30 @@ void BedGenomeCoverage::CoverageBam(string bamFile) {
 
 
 void BedGenomeCoverage::ReportChromCoverage(const vector<DEPTH> &chromCov, const CHRPOS &chromSize, const string &chrom, chromHistMap &chromDepthHist) {
+    // write to tempory files to reorder
+    if (_orderchrom){
+        if (_cout){
+            (*_cout).flush();
+        }
+        char tmpname[] = "tmp.genomecov.XXXXXXXX";
+        std::string nametmp = mktemp(tmpname);
+        ofstream _couttmp(nametmp.c_str(), ios::out);
+        if ( !_couttmp ) {
+            cerr << "Error: The requested file ("
+                << nametmp
+                << ") "
+                << "could not be opened. "
+                << "Exiting!" << endl;
+            exit (1);
+        } else {
+            _couttmp.close();
+            _cout = new ofstream(nametmp.c_str(), ios::out);
+        }
+        _orderchrom_tmp_files[chrom] = nametmp;
+    } else {
+        _cout = &cout;
+        std::string nametmp = "stdout";
+    }
 
     if (_eachBase) {
         int depth = 0; // initialize the depth
@@ -444,7 +500,7 @@ void BedGenomeCoverage::ReportChromCoverage(const vector<DEPTH> &chromCov, const
             depth += chromCov[pos].starts;
             // report the depth for this position.
             if (depth>0 || !_eachBaseZeroBased)
-                cout << chrom << "\t" << pos+offset << "\t" << depth * _scale << endl;
+                *_cout << chrom << "\t" << pos+offset << "\t" << depth * _scale << '\n';
             depth = depth - chromCov[pos].ends;
         }
     }
@@ -478,6 +534,11 @@ void BedGenomeCoverage::ReportChromCoverage(const vector<DEPTH> &chromCov, const
             unsigned int numBasesAtDepth = depthIt->second;
             cout << chrom << "\t" << depth << "\t" << numBasesAtDepth << "\t"
                 << chromSize << "\t" << (float) ((float)numBasesAtDepth / (float)chromSize) << endl;
+        }
+    }
+    if (_orderchrom){
+        if (_cout){
+            (*_cout).flush();
         }
     }
 }
@@ -547,7 +608,7 @@ void BedGenomeCoverage::ReportChromCoverageBedGraph(const vector<DEPTH> &chromCo
                 if (lastDepth >= _max) {
                     lastDepth = _max;
                 }
-                cout << chrom << "\t" << lastStart << "\t" << pos << "\t" << lastDepth * _scale << endl;
+                *_cout << chrom << "\t" << lastStart << "\t" << pos << "\t" << lastDepth * _scale << '\n';
             }
             //Set current position as the new interval start + depth
             lastDepth = depth;
@@ -560,6 +621,6 @@ void BedGenomeCoverage::ReportChromCoverageBedGraph(const vector<DEPTH> &chromCo
     }
     //Print information about the last position
     if ( (lastDepth != -1) && (lastDepth > 0 || _bedGraphAll) ) {
-        cout << chrom << "\t" << lastStart << "\t" << chromSize << "\t" << lastDepth * _scale << endl;
+        *_cout << chrom << "\t" << lastStart << "\t" << chromSize << "\t" << lastDepth * _scale << endl;
     }
 }

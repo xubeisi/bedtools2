@@ -33,6 +33,8 @@ typedef map<string, depthMap, less<string> > chromDepthMap;
 typedef map<int, unsigned int, less<int> > histMap;
 typedef map<string, histMap, less<string> > chromHistMap;
 
+typedef map<string, string, less<string> > chromToFiles;
+
 //************************************************
 // Class methods and elements
 //************************************************
@@ -49,8 +51,8 @@ public:
                       bool filterByStrand, string requestedStrand,
                       bool only_5p_end, bool only_3p_end,
                       bool pair_chip,bool haveSize, string fragmentSize, bool dUTP,
-                      bool eachBaseZeroBased,
-                      bool add_gb_track_line, string gb_track_line_opts);
+                      bool eachBaseZeroBased, bool add_gb_track_line, 
+                      bool orderchrom, string gb_track_line_opts);
 
     // destructor
     ~BedGenomeCoverage(void);
@@ -75,6 +77,7 @@ private:
     bool _pair_chip_;
     bool _haveSize;
     bool _dUTP;
+    bool _orderchrom;
     int _fragmentSize;
     float _fragcenter;
     int _fragmentSize_rev;
@@ -83,6 +86,7 @@ private:
     bool _add_gb_track_line;
     string _gb_track_line_opts;
     string _requestedStrand;
+    ostream *_cout;
 
     BedFile *_bed;
     GenomeFile *_genome;
@@ -95,7 +99,8 @@ private:
     CHRPOS _currChromSize ;
     set<string> _visitedChromosomes;
 
-
+    chromToFiles _orderchrom_tmp_files;
+    string gettmpfile(const string &chrom);
     // methods
     void CoverageBed();
     void CoverageBam(string bamFile);

@@ -342,23 +342,12 @@ interstitial intron sequence). The ``-split`` command allows for such
 overlaps to be performed.
 
 
-==============================================================================
-Coverage by fragment
-==============================================================================
-
-|
-
-.. image:: ../images/tool-glyphs/barski_binding_site.png
-
-|
-
-In ChiP-Seq the binding site is usually not at the coordinate where reads map,
-but in the middle of the fragment. For this reason we often try to estimate average fragment size
-for single-read experiment and extend the reads in the 5’-3’ direction up to the estimated fragment length.
-The coverage "by estimated fragments" or by actual pair-end fragments graph is expected to peak at the actual binding site.
+``-pc`` Calculates coverage for paired-end reads, coverage is calculated as the number of fragments covering each base pair
 
 
+==========================================================================
 ``-fs`` Forces to use provided fragment size and/or center portion
+==========================================================================
 Format as fragmentsize(+strand, default -1):center(+strand, default -1):fragmentsize(-strand, default -1):center(-strand, default -1):
 
 For example:
@@ -399,4 +388,18 @@ For example:
   chr1    22      23      1
 
 
-``-pc`` Calculates coverage for paired-end reads, coverage is calculated as the number of fragments covering each base pair
+==============================================================================
+Coverage by fragment
+==============================================================================
+
+|
+
+.. image:: ../images/tool-glyphs/barski_binding_site.png
+
+|
+
+In ChiP-Seq the binding site is usually not at the coordinate where reads map,
+but in the middle of the fragment. For this reason we often try to estimate average fragment size
+for single-read experiment and extend the reads in the 5’-3’ direction up to the estimated fragment length.
+The coverage "by estimated fragments" or by actual pair-end fragments graph is expected to peak at the actual binding site.
+
